@@ -1,24 +1,69 @@
 name: Build APK
+
 on:
   workflow_dispatch:
   push:
-    paths: ['studio.zip']
+    paths:
+      - "studio.zip"
+      - ".github/workflows/build.yml"
+      - "branding/**"
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - run: unzip -q studio.zip -d work
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unpack Android project
+        run: |
+          rm -rf work
+          unzip -q studio.zip -d work
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 8.9
-      - working-directory: work
-        run: gradle :app:assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
+          gradle-version: "8.9"
+
+      - name: Add RC Empire contact metadata
+        working-directory: work
+        run: |
+          mkdir -p app/src/main/res/values
+          cat > app/src/main/res/values/rc_empire_contacts.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="rc_empire_support_email" translatable="false">support.rcempire@gmail.com</string>
+              <string name="rc_empire_business_email" translatable="false">rcempire.official@gmail.com</string>
+              <string name="rc_empire_company_name" translatable="false">RC Empire</string>
+          </resources>
+          EOF
+
+      - name: Build debug APK
+        working-directory: work
+        run: |
+          if [ -x ./gradlew ]; then
+            ./gradlew :app:assembleDebug --no-daemon
+          else
+            gradle :app:assembleDebug --no-daemon
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: RC-App-Studio
+          name: RC-App-Studio-RC-Empire
           path: work/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Upload build metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: RC-Empire-build-info
+          path: branding/
+          if-no-files-found: error
