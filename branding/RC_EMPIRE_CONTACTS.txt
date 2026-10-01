@@ -1,0 +1,5 @@
+RC Empire
+Support: support.rcempire@gmail.com
+Business: rcempire.official@gmail.com
+
+The Android build workflow injects these contact resources into the APK build without uploading user project files to RC Empire servers.
