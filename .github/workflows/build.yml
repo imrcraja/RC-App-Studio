@@ -60,10 +60,3 @@ jobs:
           name: RC-App-Studio-RC-Empire
           path: work/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-
-      - name: Upload build metadata
-        uses: actions/upload-artifact@v4
-        with:
-          name: RC-Empire-build-info
-          path: branding/
-          if-no-files-found: error
